@@ -1,0 +1,11 @@
+{
+  "codeowners": ["@wh1terat"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/wh1terat/cleverspa-homeassistant-component",
+  "domain": "cleverspa",
+  "iot_class": "cloud_polling",
+  "name": "CleverSpa",
+  "requirements": ["pyrebase"],
+  "version": "1.0.0"
+}
