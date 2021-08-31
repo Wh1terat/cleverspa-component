@@ -11,7 +11,7 @@ SWITCHES = {
     'filter': {
         'name': 'Filter',
         'icon': 'mdi:air-filter',
-        'device_class': DEVICE_CLASS_SWITCH
+        'device_class': DEVICE_CLASS_SWITCH,
         'on_payload': {
             MAP_NAMES['filter']: 1
         },
@@ -22,7 +22,7 @@ SWITCHES = {
     'bubbles': {
         'name': 'Bubbles',
         'icon': 'mdi:chart-bubble',
-        'device_class': DEVICE_CLASS_SWITCH,,
+        'device_class': DEVICE_CLASS_SWITCH,
         'on_payload': {
             MAP_NAMES['bubbles']: 1
         },
