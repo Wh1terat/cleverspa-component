@@ -37,22 +37,4 @@ class control:
 
     def set_temp(self, did, temp):
         return self.set_data(did, {'Temperature_setup': temp})
-    '''
-    def set_filter_on(self, did):
-        return self.set_data(did, {'Filter':1})
-    
-    def set_filter_off(self, did):
-        return self.set_data(did, {'Filter':0})
 
-    def set_heater_on(self, did):
-        return self.set_data(did, {'Heater':1, 'Filter':1})
-    
-    def set_heater_off(self, did):
-        return self.set_data(did, {'Heater':0, 'Filter':0})
-
-    def set_bubbles_on(self, did):
-        return self.set_data(did, {'Bubble':1})
-    
-    def set_bubbles_off(self, did):
-        return self.set_data(did, {'Bubble':0})
-    '''
