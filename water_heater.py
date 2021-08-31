@@ -18,10 +18,18 @@ from . import CleverSpaEntity
 from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES, MIN_TEMP, MAX_TEMP
 
 WATERHEATERS = {
-        'water_heater': {
-            'name': 'Hot Tub',
-            'icon': 'mdi:hot-tub',
-        }
+    'water_heater': {
+        'name': 'Hot Tub',
+        'icon': 'mdi:hot-tub',
+         'on_payload': {
+            MAP_NAMES['heater']: 1,
+            MAP_NAMES['filter']: 1
+        },
+        'off_payload': {
+            MAP_NAMES['heater']: 0,
+            MAP_NAMES['filter']: 0
+        },
+    }
 }
 
 STATES = [STATE_ON, STATE_OFF]
@@ -122,13 +130,16 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
     async def async_turn_on(self):
         """Turn on."""
         await self.hass.async_add_executor_job(
-            self.coordinator.client.set_heater_on,
-            self.coordinator.device_id
+            self.coordinator.client.set_data,
+            self.coordinator.device_id,
+            WATERHEATERS[self.info_type]['on_payload']
         )
 
     async def async_turn_off(self):
         """Turn off."""
         await self.hass.async_add_executor_job(
-            self.coordinator.client.set_heater_off,
-            self.coordinator.device_id
+            self.coordinator.client.set_data,
+            self.coordinator.device_id,
+            WATERHEATERS[self.info_type]['on_payload']
         )
+

@@ -2,7 +2,7 @@
   "codeowners": ["@wh1terat"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/wh1terat/cleverspa-homeassistant-component",
+  "documentation": "https://github.com/wh1terat/cleverspa-component",
   "domain": "cleverspa",
   "iot_class": "cloud_polling",
   "name": "CleverSpa",

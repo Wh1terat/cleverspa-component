@@ -8,21 +8,41 @@ from . import CleverSpaEntity
 from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES
 
 SWITCHES = {
-        'filter': {
-            'name': 'Filter',
-            'icon': 'mdi:air-filter',
-            'device_class': DEVICE_CLASS_SWITCH
+    'filter': {
+        'name': 'Filter',
+        'icon': 'mdi:air-filter',
+        'device_class': DEVICE_CLASS_SWITCH
+        'on_payload': {
+            MAP_NAMES['filter']: 1
         },
-        'bubbles': {
-            'name': 'Bubbles',
-            'icon': 'mdi:chart-bubble',
-            'device_class': DEVICE_CLASS_SWITCH,
+        'off_payload': {
+            MAP_NAMES['filter']: 0
         },
-        'heater': {
-            'name': 'Heater',
-            'icon': 'mdi:fire',
-            'device_class': DEVICE_CLASS_SWITCH,
-        }
+    },
+    'bubbles': {
+        'name': 'Bubbles',
+        'icon': 'mdi:chart-bubble',
+        'device_class': DEVICE_CLASS_SWITCH,,
+        'on_payload': {
+            MAP_NAMES['bubbles']: 1
+        },
+        'off_payload': {
+            MAP_NAMES['bubbles']: 0
+        },
+   },
+    'heater': {
+        'name': 'Heater',
+        'icon': 'mdi:fire',
+        'device_class': DEVICE_CLASS_SWITCH,
+        'on_payload': {
+            MAP_NAMES['heater']: 1, 
+            MAP_NAMES['filter']: 1
+        },
+        'off_payload': {
+            MAP_NAMES['heater']: 0, 
+            MAP_NAMES['filter']: 0
+        },
+    }
 }
 
 
@@ -61,7 +81,7 @@ class CleverSpaSwitchEntity(CleverSpaEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            {MAP_NAMES[self.info_type]: 1}
+            SWITCHES[self.info_type]['on_payload']
         )
 
     async def async_turn_off(self):
@@ -69,5 +89,5 @@ class CleverSpaSwitchEntity(CleverSpaEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            {MAP_NAMES[self.info_type]: 0}
+            SWITCHES[self.info_type]['off_payload']
         )

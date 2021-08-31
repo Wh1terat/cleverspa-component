@@ -8,21 +8,21 @@ from . import CleverSpaEntity
 from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES
 
 BINARY_SENSORS = {
-        'filter_warning': {
-            'name': 'Replace Filter Warning',
-            'icon': 'mdi:sync-alert',
-            'device_class': DEVICE_CLASS_PROBLEM
-        },
-        'freeze_warning': {
-            'name': 'Freeze Warning',
-            'icon': 'mdi:snowflake-alert',
-            'device_class': DEVICE_CLASS_PROBLEM,
-        },
-        'overheat_warning': {
-            'name': 'Overheat Warning',
-            'icon': 'mdi:fire-alert',
-            'device_class': DEVICE_CLASS_PROBLEM,
-        }
+    'filter_warning': {
+        'name': 'Replace Filter Warning',
+        'icon': 'mdi:sync-alert',
+        'device_class': DEVICE_CLASS_PROBLEM
+    },
+    'freeze_warning': {
+        'name': 'Freeze Warning',
+        'icon': 'mdi:snowflake-alert',
+        'device_class': DEVICE_CLASS_PROBLEM,
+    },
+    'overheat_warning': {
+        'name': 'Overheat Warning',
+        'icon': 'mdi:fire-alert',
+        'device_class': DEVICE_CLASS_PROBLEM,
+    }
 }
 
 
