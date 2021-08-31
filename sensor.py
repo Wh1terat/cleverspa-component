@@ -7,10 +7,10 @@ from . import CleverSpaEntity
 from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES
 
 # STATE_CLASS_TOTAL_INCREASING only added recently.
-try:
-    from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
-except ModuleNotFoundError as err:
-    STATE_CLASS_TOTAL_INCREASING = None
+#try:
+#    from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
+#except ModuleNotFoundError as err:
+#    STATE_CLASS_TOTAL_INCREASING = None
 
 SENSORS = {
         'filter_time': {
@@ -18,7 +18,7 @@ SENSORS = {
             'icon': 'mdi:history',
             'unit': 'Minutes',
             'device_class': None,
-            'state_class': STATE_CLASS_TOTAL_INCREASING
+            #'state_class': STATE_CLASS_TOTAL_INCREASING
         }
 }
 
