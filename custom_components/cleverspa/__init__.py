@@ -1,4 +1,5 @@
 """The CleverSpa integration."""
+from __future__ import annotations
 import logging
 from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
@@ -7,22 +8,32 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.const import (
+    CONF_ID,
+    CONF_NAME,
+    CONF_ICON,
+    CONF_TOKEN,
+    CONF_DEVICE_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+)
 from .const import (
     DOMAIN,
-    CONF_TOKEN,
-    CONF_DID,
+    PLATFORMS,
     CONF_DEVICE_INFO,
-    CONF_MODEL,
-    CONF_SWVER,
     DEFAULT_NAME,
     MANUFACTURER,
-    MAP_NAMES
+    MAP_KEYS,
+    MAP_KEYS_INV
 )
 from .cleverspa.control import control as cleverspa_control
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ['sensor', 'binary_sensor', 'switch', 'water_heater']
+SCAN_INTERVAL = timedelta(seconds=15)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up CleverSpa from a config entry."""
@@ -53,7 +64,7 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, entry):
         """Initialize."""
         self.token = entry.data[CONF_TOKEN]
-        self.device_id = entry.data[CONF_DEVICE_INFO][CONF_DID]
+        self.device_id = entry.data[CONF_DEVICE_INFO][CONF_DEVICE_ID]
         self.client = cleverspa_control(self.token)
         #self.entry = entry
 
@@ -61,14 +72,17 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"CleverSpa data measure for {self.device_id}",
-            update_interval=timedelta(seconds=15),
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(
-            self.client.get_data, self.device_id
+        data = await self.hass.async_add_executor_job(
+            self.client.get_data,
+            self.device_id
         )
+        #return {MAP_KEYS[k]:v for k,v in data.items() if k in MAP_KEYS.keys()}
+        return {MAP_KEYS.get(k,k):v for k,v in data.items()}
 
 
 class CleverSpaEntity(CoordinatorEntity):
@@ -78,16 +92,31 @@ class CleverSpaEntity(CoordinatorEntity):
         """Initialize CleverSpa sensor."""
         super().__init__(coordinator)
         self.hass = coordinator.hass
-        self.device_id = device[CONF_DID]
+        self.device_id = device[CONF_DEVICE_ID]
         self.info_type = info_type
-        self._attr_unique_id = f'{self.device_id}-{self.info_type}'
-        self.entity_id = f'{DOMAIN}.{DOMAIN}_{self.device_id}_{self.info_type}'
+        #self._attr_unique_id = f'{self.device_id}-{self.info_type[CONF_ID]}'
+        self.entity_id = f'{DOMAIN}.{DOMAIN}_{self.device_id}_{self.info_type[CONF_ID]}'
         self._attr_device_info = {
-            "name": DEFAULT_NAME,
-            "identifiers": {
+            ATTR_NAME: DEFAULT_NAME,
+            ATTR_IDENTIFIERS: {
                 (DOMAIN, self.device_id)
             },
-            "manufacturer": MANUFACTURER,
-            "model": device[CONF_MODEL],
-            "sw_version": device[CONF_SWVER]
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: device[ATTR_MODEL],
+            ATTR_SW_VERSION: device[ATTR_SW_VERSION]
         }
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the particular component."""
+        return f'{self.device_id}-{self.info_type[CONF_ID]}'
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the particular component."""
+        return f"{DEFAULT_NAME} {self.info_type[CONF_NAME]}"
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        return self.info_type[CONF_ICON]

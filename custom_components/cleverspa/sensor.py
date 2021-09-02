@@ -3,8 +3,20 @@ from __future__ import annotations
 from homeassistant.components.sensor import (
         SensorEntity,
 )
+from homeassistant.const import (
+    CONF_ID,
+    CONF_NAME,
+    CONF_ICON,
+    CONF_DEVICE_CLASS,
+    #CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+    TIME_MINUTES
+)
+from .const import (
+    DOMAIN,
+    CONF_DEVICE_INFO,
+)
 from . import CleverSpaEntity
-from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES
 
 # STATE_CLASS_TOTAL_INCREASING only added recently.
 #try:
@@ -12,21 +24,22 @@ from .const import DOMAIN, CONF_DEVICE_INFO, MAP_NAMES
 #except ModuleNotFoundError as err:
 #    STATE_CLASS_TOTAL_INCREASING = None
 
-SENSORS = {
-        'filter_time': {
-            'name': 'Filter Age',
-            'icon': 'mdi:history',
-            'unit': 'Minutes',
-            'device_class': None,
-            #'state_class': STATE_CLASS_TOTAL_INCREASING
+SENSORS = [
+        {
+            CONF_ID: 'filter_time',
+            CONF_NAME: 'Filter Age',
+            CONF_ICON: 'mdi:history',
+            CONF_UNIT_OF_MEASUREMENT: TIME_MINUTES,
+            CONF_DEVICE_CLASS: None,
+            #CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING
         }
-}
+]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, config, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    device = config_entry.data[CONF_DEVICE_INFO]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = config.data[CONF_DEVICE_INFO]
+    coordinator = hass.data[DOMAIN][config.entry_id]
 
     sensors_list = []
     for sensor in SENSORS:
@@ -39,26 +52,16 @@ class CleverSpaSensor(CleverSpaEntity, SensorEntity):
     """Sensor representing CleverSpa data."""
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the particular component."""
-        return f"CleverSpa {SENSORS[self.info_type]['name']}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return SENSORS[self.info_type]['icon']
-
-    @property
     def device_class(self) -> str | None:
         """Return the device class."""
-        return SENSORS[self.info_type]['device_class']
+        return self.info_type[CONF_DEVICE_CLASS]
 
     @property
     def native_value(self) -> str:
         """State of the sensor."""
-        return self.coordinator.data[MAP_NAMES[self.info_type]]
+        return self.coordinator.data[self.info_type[CONF_ID]]
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement."""
-        return SENSORS[self.info_type]['unit']
+        return self.info_type[CONF_UNIT_OF_MEASUREMENT]

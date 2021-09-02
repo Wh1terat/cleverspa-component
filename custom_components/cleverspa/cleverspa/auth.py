@@ -5,6 +5,7 @@ from .errors import AuthError
 from .const import FIREBASE_CONFIG
 
 class auth:
+
     def login(username, password):
         firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
         auth = firebase.auth()
@@ -16,3 +17,4 @@ class auth:
             raise AuthError(e['error']['message'])
         info = db.child('users').child(user['localId']).get(token=user['idToken']).val()
         return info['token']
+

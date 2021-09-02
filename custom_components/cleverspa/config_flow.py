@@ -7,14 +7,19 @@ import voluptuous as vol
 from requests.exceptions import HTTPError, Timeout
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+    CONF_FRIENDLY_NAME,
+    CONF_TOKEN,
+    ATTR_MODEL
+)
 from .const import (
     DOMAIN,
-    CONF_TOKEN,
     CONF_DEVICE_INFO,
-    CONF_DID,
-    CONF_DEVICE,
+    MAP_KEYS,
     DEFAULT_NAME
 )
 
@@ -27,8 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for CleverSpa."""
-
-    VERSION = 1
 
     _email: str | None = None
     _password: str | None = None
@@ -62,20 +65,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._show_setup_form(errors)
 
         controller = cleverspa_control(self._token)
-        devices = await self.hass.async_add_executor_job(controller.get_devices)
+        raw_devices = await self.hass.async_add_executor_job(controller.get_devices)
+        devices = [
+            {MAP_KEYS.get(k, k): v for k, v in device.items()}
+            for device in raw_devices
+        ]
 
-        # If multiple spas found (rare case), ask the user to choose one in a select box.
+        # If multiple devices are found (unusual for this component)
+        # ask the user to choose one in a select box.
         if len(devices) > 1:
             self._devices = devices
             return await self.async_step_devices()
         self._device = devices[0]
 
         # Check if already configured
-        await self.async_set_unique_id(self._device[CONF_DID])
+        await self.async_set_unique_id(self._device[CONF_DEVICE_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self._device['dev_alias'] or DEFAULT_NAME,
+            title=self._device[CONF_FRIENDLY_NAME] or DEFAULT_NAME,
             data={
                 CONF_TOKEN: self._token,
                 CONF_DEVICE_INFO: self._device
@@ -98,7 +106,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_devices(self, user_input=None):
         """Handle the device selection step."""
         if not user_input:
-            device_list = ['{product_name}-{did}'.format(**device) for device in self._devices]
+            device_label = f'{ATTR_MODEL}-{CONF_DEVICE_ID}'
+            device_list = [device_label.format(**device) for device in self._devices]
 
             return self.async_show_form(
                 step_id='devices',
@@ -113,18 +122,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._device = next(
             device
             for device in self._devices
-            if user_input[CONF_DEVICE].endswith(device[CONF_DID])
+            if user_input[CONF_DEVICE].endswith(device[CONF_DEVICE_ID])
         )
 
         # Check if already configured
-        await self.async_set_unique_id(self._device[CONF_DID])
+        await self.async_set_unique_id(self._device[CONF_DEVICE_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self._device['dev_alias'] or DEFAULT_NAME,
+            title=self._device[CONF_FRIENDLY_NAME] or DEFAULT_NAME,
             data={
                 CONF_TOKEN: self._token,
                 CONF_DEVICE_INFO: self._device
             },
         )
- 
