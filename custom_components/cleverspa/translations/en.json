@@ -15,15 +15,23 @@
         "data": {
           "device": "Select Device"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Integration",
+        "description": "The CleverSpa integration needs to re-authenticate your account.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
       }
-    },
+    }, 
     "error": {
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid authentication",
-      "invalid_token": "Invalid access token",
       "unknown": "Unexpected error"
     },
     "abort": {
+      "reauth_successful": "Re-authentication was successful",
       "already_configured_device": "Device is already configured"
     }
   }

@@ -12,6 +12,7 @@ MAX_TEMP = 42
 COOLDOWN_TIME = 30
 
 CONF_DEVICE_INFO = 'device_info'
+CONF_TOKEN_EXPIRY = 'expire_at'
 
 MAP_KEYS = {
     'Time_filter':'filter_time',

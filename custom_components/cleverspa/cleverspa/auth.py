@@ -16,5 +16,5 @@ class auth:
             e = json.loads(e.strerror)
             raise AuthError(e['error']['message'])
         info = db.child('users').child(user['localId']).get(token=user['idToken']).val()
-        return info['token']
+        return dict(info)
 

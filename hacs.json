@@ -1,5 +1,6 @@
 {
   "name": "CleverSpa",
+  "domains": ["binary_sensor", "sensor", "water_heater"],
   "render_readme": true,
   "iot_class": "cloud_polling"
 }

@@ -1,9 +1,10 @@
 """The CleverSpa integration."""
 from __future__ import annotations
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_TOKEN,
     CONF_DEVICE_ID,
+    CONF_AUTHENTICATION,
     ATTR_IDENTIFIERS,
     ATTR_NAME,
     ATTR_MANUFACTURER,
@@ -24,6 +26,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     CONF_DEVICE_INFO,
+    CONF_TOKEN_EXPIRY,
     DEFAULT_NAME,
     MANUFACTURER,
     MAP_KEYS,
@@ -63,10 +66,9 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, entry):
         """Initialize."""
-        self.token = entry.data[CONF_TOKEN]
+        self._auth = entry.data[CONF_AUTHENTICATION]
         self.device_id = entry.data[CONF_DEVICE_INFO][CONF_DEVICE_ID]
-        self.client = cleverspa_control(self.token)
-        #self.entry = entry
+        self.client = cleverspa_control(self._auth[CONF_TOKEN])
 
         super().__init__(
             hass,
@@ -77,11 +79,13 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
+        if self._auth[CONF_TOKEN_EXPIRY] < int(datetime.now().timestamp()):
+            raise ConfigEntryAuthFailed
+
         data = await self.hass.async_add_executor_job(
             self.client.get_data,
             self.device_id
         )
-        #return {MAP_KEYS[k]:v for k,v in data.items() if k in MAP_KEYS.keys()}
         return {MAP_KEYS.get(k,k):v for k,v in data.items()}
 
 
@@ -94,7 +98,6 @@ class CleverSpaEntity(CoordinatorEntity):
         self.hass = coordinator.hass
         self.device_id = device[CONF_DEVICE_ID]
         self.info_type = info_type
-        #self._attr_unique_id = f'{self.device_id}-{self.info_type[CONF_ID]}'
         self.entity_id = f'{DOMAIN}.{DOMAIN}_{self.device_id}_{self.info_type[CONF_ID]}'
         self._attr_device_info = {
             ATTR_NAME: DEFAULT_NAME,

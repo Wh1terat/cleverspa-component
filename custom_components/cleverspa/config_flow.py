@@ -14,11 +14,13 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_FRIENDLY_NAME,
     CONF_TOKEN,
+    CONF_AUTHENTICATION,
     ATTR_MODEL
 )
 from .const import (
     DOMAIN,
     CONF_DEVICE_INFO,
+    CONF_TOKEN_EXPIRY,
     MAP_KEYS,
     DEFAULT_NAME
 )
@@ -35,7 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _email: str | None = None
     _password: str | None = None
-    _token: str | None = None
+    _auth: dict | None = None
+    _reauth: bool | None = None
     _device: str | None = None
     _devices: list | None = None
 
@@ -48,9 +51,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         errors = {}
-        if not self._token:
+        if not self._auth:
             try:
-                self._token = await self.hass.async_add_executor_job(
+                self._auth = await self.hass.async_add_executor_job(
                     cleverspa_auth.login,
                     self._email,
                     self._password
@@ -59,12 +62,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = 'invalid_auth'
             except (Timeout, ConnectionError):
                 errors["base"] = 'cannot_connect'
-            if not errors and not self._token:
-                errors["base"] = 'invalid_token'
+            if not errors and not self._auth:
+                errors["base"] = 'unknown'            
             if errors:
                 return self._show_setup_form(errors)
 
-        controller = cleverspa_control(self._token)
+        controller = cleverspa_control(self._auth[CONF_TOKEN])
         raw_devices = await self.hass.async_add_executor_job(controller.get_devices)
         devices = [
             {MAP_KEYS.get(k, k): v for k, v in device.items()}
@@ -76,16 +79,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if len(devices) > 1:
             self._devices = devices
             return await self.async_step_devices()
-        self._device = devices[0]
+        else:
+            self._device = devices[0]
 
         # Check if already configured
-        await self.async_set_unique_id(self._device[CONF_DEVICE_ID])
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(self._device[CONF_DEVICE_ID])
+        if existing_entry:
+            if self._reauth:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={
+                        CONF_AUTHENTICATION: self._auth
+                    }
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+            else:
+                self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=self._device[CONF_FRIENDLY_NAME] or DEFAULT_NAME,
             data={
-                CONF_TOKEN: self._token,
+                CONF_AUTHENTICATION: self._auth,
                 CONF_DEVICE_INFO: self._device
             },
         )
@@ -108,7 +123,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             device_label = f'{ATTR_MODEL}-{CONF_DEVICE_ID}'
             device_list = [device_label.format(**device) for device in self._devices]
-
             return self.async_show_form(
                 step_id='devices',
                 data_schema=vol.Schema(
@@ -117,22 +131,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 ),
             )
-
         # Get chosen device.
         self._device = next(
             device
             for device in self._devices
             if user_input[CONF_DEVICE].endswith(device[CONF_DEVICE_ID])
         )
+        return await self.async_step_user(user_input)
 
-        # Check if already configured
-        await self.async_set_unique_id(self._device[CONF_DEVICE_ID])
-        self._abort_if_unique_id_configured()
+        
+        async def async_step_reauth(self, user_input=None):
+            """Perform reauth upon an token expiry."""
+            self._auth = None
+            self._reauth = True
+            return await self.async_step_reauth_confirm()
 
-        return self.async_create_entry(
-            title=self._device[CONF_FRIENDLY_NAME] or DEFAULT_NAME,
-            data={
-                CONF_TOKEN: self._token,
-                CONF_DEVICE_INFO: self._device
-            },
-        )
+
+        async def async_step_reauth_confirm(self, user_input=None):
+            """Dialog that informs the user that reauth is required."""
+            if user_input is None:
+                return self.async_show_form(
+                    step_id='reauth_configm',
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_EMAIL): str,
+                            vol.Required(CONF_PASSWORD): str
+                        }
+                    ),
+                    errors=errors,
+                )
+            return await self.async_step_user(user_input)        
