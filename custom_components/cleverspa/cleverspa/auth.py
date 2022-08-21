@@ -1,20 +1,25 @@
-import json
-import pyrebase
 import requests
 from .errors import AuthError
-from .const import FIREBASE_CONFIG
+from .const import GOOGLE_AUTH_URL, GOOGLE_AUTH_KEY, FIREBASE_DB
+
 
 class auth:
-
-    def login(username, password):
-        firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
-        auth = firebase.auth()
-        db = firebase.database()
+    def login(email, password):
         try:
-            user = auth.sign_in_with_email_and_password(username, password)
+            user = requests.post(
+                GOOGLE_AUTH_URL,
+                params={"key": GOOGLE_AUTH_KEY},
+                json={"email": email, "password": password, "returnSecureToken": True},
+            ).json()
         except requests.exceptions.HTTPError as e:
-            e = json.loads(e.strerror)
-            raise AuthError(e['error']['message'])
-        info = db.child('users').child(user['localId']).get(token=user['idToken']).val()
+            e = e.response.json()
+            raise AuthError(e["error"]["message"])
+        try:
+            info = requests.get(
+                f"{FIREBASE_DB}/users/{user['localId']}.json",
+                params={"auth": user["idToken"]},
+            ).json()
+        except requests.exceptions.HTTPError as e:
+            e = e.response.json()
+            raise AuthError(e["error"]["message"])
         return dict(info)
-

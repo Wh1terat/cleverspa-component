@@ -1,42 +1,37 @@
 """Platform for CleverSpa binary_sensor integration."""
 from __future__ import annotations
 from homeassistant.components.binary_sensor import (
-        BinarySensorEntity,
-        DEVICE_CLASS_PROBLEM
+    BinarySensorEntity,
+    DEVICE_CLASS_PROBLEM,
 )
-from homeassistant.const import (
-        CONF_ID,
-        CONF_NAME,
-        CONF_ICON,
-        CONF_DEVICE_CLASS
-)
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_ICON, CONF_DEVICE_CLASS
 from .const import (
-        DOMAIN,
-        CONF_DEVICE_INFO,
-        #MAP_KEYS_INV
+    DOMAIN,
+    CONF_DEVICE_INFO,
 )
 from . import CleverSpaEntity
 
 BINARY_SENSORS = [
     {
-        CONF_ID: 'filter_warning',
-        CONF_NAME: 'Replace Filter Warning',
-        CONF_ICON: 'mdi:sync-alert',
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM
-    },
-    {
-        CONF_ID: 'freeze_warning',
-        CONF_NAME: 'Freeze Warning',
-        CONF_ICON: 'mdi:snowflake-alert',
+        CONF_ID: "filter_warning",
+        CONF_NAME: "Replace Filter Warning",
+        CONF_ICON: "mdi:sync-alert",
         CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
     },
     {
-        CONF_ID: 'overheat_warning',
-        CONF_NAME: 'Overheat Warning',
-        CONF_ICON: 'mdi:fire-alert',
+        CONF_ID: "freeze_warning",
+        CONF_NAME: "Freeze Warning",
+        CONF_ICON: "mdi:snowflake-alert",
         CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-    }
+    },
+    {
+        CONF_ID: "overheat_warning",
+        CONF_NAME: "Overheat Warning",
+        CONF_ICON: "mdi:fire-alert",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+    },
 ]
+
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Defer sensor setup to the shared sensor module."""

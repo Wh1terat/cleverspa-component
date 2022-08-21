@@ -1,10 +1,7 @@
 """Platform for CleverSpa sensor integration."""
 from __future__ import annotations
-from homeassistant.components.switch import (
-        SwitchEntity,
-        DEVICE_CLASS_SWITCH
-)
-from homeassistant.const import(
+from homeassistant.components.switch import SwitchEntity, DEVICE_CLASS_SWITCH
+from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_ICON,
@@ -12,39 +9,25 @@ from homeassistant.const import(
     CONF_COMMAND_ON,
     CONF_COMMAND_OFF,
 )
-from .const import (
-    DOMAIN,
-    CONF_DEVICE_INFO,
-    #CONF_FILTER,
-    #CONF_BUBBLES,
-    #CONF_HEATER,
-    MAP_KEYS_INV
-)
+from .const import DOMAIN, CONF_DEVICE_INFO, MAP_KEYS_INV
 from . import CleverSpaEntity
+
 SWITCHES = [
     {
-        CONF_ID: 'filter',
-        CONF_NAME: 'Filter',
-        CONF_ICON: 'mdi:air-filter',
+        CONF_ID: "filter",
+        CONF_NAME: "Filter",
+        CONF_ICON: "mdi:air-filter",
         CONF_DEVICE_CLASS: DEVICE_CLASS_SWITCH,
-        CONF_COMMAND_ON: [
-            {MAP_KEYS_INV['filter']: 1}
-        ],
-        CONF_COMMAND_OFF: [
-            {MAP_KEYS_INV['filter']: 0}
-        ],
+        CONF_COMMAND_ON: [{MAP_KEYS_INV["filter"]: 1}],
+        CONF_COMMAND_OFF: [{MAP_KEYS_INV["filter"]: 0}],
     },
     {
-        CONF_ID:'bubbles',
-        CONF_NAME: 'Bubbles',
-        CONF_ICON: 'mdi:chart-bubble',
+        CONF_ID: "bubbles",
+        CONF_NAME: "Bubbles",
+        CONF_ICON: "mdi:chart-bubble",
         CONF_DEVICE_CLASS: DEVICE_CLASS_SWITCH,
-        CONF_COMMAND_ON: [
-            {MAP_KEYS_INV['bubbles']: 1}
-        ],
-        CONF_COMMAND_OFF: [
-            {MAP_KEYS_INV['bubbles']: 0}
-        ],
+        CONF_COMMAND_ON: [{MAP_KEYS_INV["bubbles"]: 1}],
+        CONF_COMMAND_OFF: [{MAP_KEYS_INV["bubbles"]: 0}],
     },
 ]
 
@@ -74,7 +57,7 @@ class CleverSpaSwitchEntity(CleverSpaEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            self.info_type[CONF_COMMAND_ON]
+            self.info_type[CONF_COMMAND_ON],
         )
         await self.coordinator.async_request_refresh()
 
@@ -83,6 +66,6 @@ class CleverSpaSwitchEntity(CleverSpaEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            self.info_type[CONF_COMMAND_OFF]
+            self.info_type[CONF_COMMAND_OFF],
         )
         await self.coordinator.async_request_refresh()

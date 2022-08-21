@@ -10,10 +10,10 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_OFF,
     TEMP_CELSIUS,
-    PRECISION_WHOLE
+    PRECISION_WHOLE,
 )
 from homeassistant.components.water_heater import (
-    STATE_ELECTRIC,        
+    STATE_ELECTRIC,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
@@ -24,29 +24,19 @@ from .const import (
     MAP_KEYS_INV,
     MIN_TEMP,
     MAX_TEMP,
-    COOLDOWN_TIME
+    COOLDOWN_TIME,
 )
 from . import CleverSpaEntity
 
 WATERHEATER = {
-    CONF_ID: 'water_heater',
-    CONF_NAME: 'Hot Tub',
-    CONF_ICON: 'mdi:hot-tub',
-    CONF_COMMAND_ON: [
-        {MAP_KEYS_INV['heater']: 1}
-    ],
-    CONF_COMMAND_OFF: [
-        {MAP_KEYS_INV['heater']: 0},
-        {MAP_KEYS_INV['filter']: 1}
-    ],
+    CONF_ID: "water_heater",
+    CONF_NAME: "Hot Tub",
+    CONF_ICON: "mdi:hot-tub",
+    CONF_COMMAND_ON: [{MAP_KEYS_INV["heater"]: 1}],
+    CONF_COMMAND_OFF: [{MAP_KEYS_INV["heater"]: 0}, {MAP_KEYS_INV["filter"]: 1}],
 }
 
-HEATER_ATTRS = [
-    'filter_warning',
-    'freeze_warning',
-    'overheat_warning',
-    'filter_time'
-]
+HEATER_ATTRS = ["filter_warning", "freeze_warning", "overheat_warning", "filter_time"]
 
 STATES = [STATE_ELECTRIC, STATE_OFF]
 
@@ -54,9 +44,7 @@ async def async_setup_entry(hass, config, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
     device = config.data[CONF_DEVICE_INFO]
     coordinator = hass.data[DOMAIN][config.entry_id]
-    async_add_entities(
-        [CleverSpaWaterHeater(coordinator, device, WATERHEATER)], True
-    )
+    async_add_entities([CleverSpaWaterHeater(coordinator, device, WATERHEATER)], True)
 
 
 class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
@@ -70,7 +58,7 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return the current operating mode (On, or Off)."""
-        state = self.coordinator.data['heater']
+        state = self.coordinator.data["heater"]
         return STATE_ELECTRIC if state else STATE_OFF
 
     @property
@@ -81,12 +69,12 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.coordinator.data['current_temperature']
+        return self.coordinator.data["current_temperature"]
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.coordinator.data['target_temperature']
+        return self.coordinator.data["target_temperature"]
 
     @property
     def min_temp(self) -> float | None:
@@ -111,18 +99,14 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the extra state attributes of the CleverSpa sensor."""
-        return {
-            k: v
-            for k, v in self.coordinator.data.items()
-            if k in HEATER_ATTRS
-        }
+        return {k: v for k, v in self.coordinator.data.items() if k in HEATER_ATTRS}
 
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature for the tub."""
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            {MAP_KEYS_INV['target_temperature']: int(kwargs[ATTR_TEMPERATURE])}
+            [{MAP_KEYS_INV["target_temperature"]: int(kwargs[ATTR_TEMPERATURE])}],
         )
 
     async def async_turn_on(self):
@@ -130,7 +114,7 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            self.info_type[CONF_COMMAND_ON]
+            self.info_type[CONF_COMMAND_ON],
         )
         await self.coordinator.async_request_refresh()
 
@@ -139,7 +123,7 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            self.info_type[CONF_COMMAND_OFF]
+            self.info_type[CONF_COMMAND_OFF],
         )
         # Not sure if this is 'naughty' or not
         self.hass.loop.call_later(
@@ -147,6 +131,6 @@ class CleverSpaWaterHeater(CleverSpaEntity, WaterHeaterEntity):
             self.hass.async_add_executor_job,
             self.coordinator.client.set_data,
             self.coordinator.device_id,
-            {MAP_KEYS_INV['filter']: 0}
+            [{MAP_KEYS_INV["filter"]: 0}],
         )
         await self.coordinator.async_request_refresh()

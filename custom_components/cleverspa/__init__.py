@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_TOKEN,
     CONF_DEVICE_ID,
+    CONF_UNIQUE_ID,
     CONF_AUTHENTICATION,
     ATTR_IDENTIFIERS,
     ATTR_NAME,
@@ -30,7 +31,7 @@ from .const import (
     DEFAULT_NAME,
     MANUFACTURER,
     MAP_KEYS,
-    MAP_KEYS_INV
+    MAP_KEYS_INV,
 )
 from .cleverspa.control import control as cleverspa_control
 
@@ -38,10 +39,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up CleverSpa from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
     coordinator = CleverSpaDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -67,7 +68,10 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, entry):
         """Initialize."""
         self._auth = entry.data[CONF_AUTHENTICATION]
-        self.device_id = entry.data[CONF_DEVICE_INFO][CONF_DEVICE_ID]
+        #_LOGGER.warn(entry)
+        #_LOGGER.warn(entry.data)
+        #self.device_id = entry.data[CONF_DEVICE_INFO][CONF_DEVICE_ID]
+        self.device_id = entry.unique_id
         self.client = cleverspa_control(self._auth[CONF_TOKEN])
 
         super().__init__(
@@ -80,13 +84,12 @@ class CleverSpaDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         if self._auth[CONF_TOKEN_EXPIRY] < int(datetime.now().timestamp()):
-            raise ConfigEntryAuthFailed
+            raise ConfigEntryAuthFailed('Token Expired')
 
         data = await self.hass.async_add_executor_job(
-            self.client.get_data,
-            self.device_id
+            self.client.get_data, self.device_id
         )
-        return {MAP_KEYS.get(k,k):v for k,v in data.items()}
+        return {MAP_KEYS.get(k, k): v for k, v in data.items()}
 
 
 class CleverSpaEntity(CoordinatorEntity):
@@ -96,23 +99,16 @@ class CleverSpaEntity(CoordinatorEntity):
         """Initialize CleverSpa sensor."""
         super().__init__(coordinator)
         self.hass = coordinator.hass
-        self.device_id = device[CONF_DEVICE_ID]
+        self.device = device
         self.info_type = info_type
-        self.entity_id = f'{DOMAIN}.{DOMAIN}_{self.device_id}_{self.info_type[CONF_ID]}'
-        self._attr_device_info = {
-            ATTR_NAME: DEFAULT_NAME,
-            ATTR_IDENTIFIERS: {
-                (DOMAIN, self.device_id)
-            },
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: device[ATTR_MODEL],
-            ATTR_SW_VERSION: device[ATTR_SW_VERSION]
-        }
+        self.entity_id = (
+            f"{DOMAIN}.{DOMAIN}_{self.device[CONF_DEVICE_ID]}_{self.info_type[CONF_ID]}"
+        )
 
     @property
     def unique_id(self) -> str | None:
         """Return the unique id of the particular component."""
-        return f'{self.device_id}-{self.info_type[CONF_ID]}'
+        return f"{self.device[CONF_DEVICE_ID]}-{self.info_type[CONF_ID]}"
 
     @property
     def name(self) -> str | None:
@@ -123,3 +119,14 @@ class CleverSpaEntity(CoordinatorEntity):
     def icon(self) -> str | None:
         """Return the icon."""
         return self.info_type[CONF_ICON]
+
+    @property
+    def device_info(self) -> dict | None:
+        """Return information about the device,"""
+        return {
+            ATTR_NAME: DEFAULT_NAME,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.device[CONF_DEVICE_ID])},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: self.device[ATTR_MODEL],
+            ATTR_SW_VERSION: self.device[ATTR_SW_VERSION],
+        }

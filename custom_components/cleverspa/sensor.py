@@ -1,16 +1,15 @@
 """Platform for CleverSpa sensor integration."""
 from __future__ import annotations
 from homeassistant.components.sensor import (
-        SensorEntity,
+    SensorEntity,
 )
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_ICON,
     CONF_DEVICE_CLASS,
-    #CONF_STATE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
-    TIME_MINUTES
+    TIME_MINUTES,
 )
 from .const import (
     DOMAIN,
@@ -18,21 +17,14 @@ from .const import (
 )
 from . import CleverSpaEntity
 
-# STATE_CLASS_TOTAL_INCREASING only added recently.
-#try:
-#    from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
-#except ModuleNotFoundError as err:
-#    STATE_CLASS_TOTAL_INCREASING = None
-
 SENSORS = [
-        {
-            CONF_ID: 'filter_time',
-            CONF_NAME: 'Filter Age',
-            CONF_ICON: 'mdi:history',
-            CONF_UNIT_OF_MEASUREMENT: TIME_MINUTES,
-            CONF_DEVICE_CLASS: None,
-            #CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING
-        }
+    {
+        CONF_ID: "filter_time",
+        CONF_NAME: "Filter Age",
+        CONF_ICON: "mdi:history",
+        CONF_UNIT_OF_MEASUREMENT: TIME_MINUTES,
+        CONF_DEVICE_CLASS: None,
+    }
 ]
 
 
